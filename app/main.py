@@ -13,15 +13,18 @@ Prefijo de rutas: /api/apuestas
 """
 import json
 import os
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from .auth import requiere_admin, usuario_actual
 from .db import conexion, dict_cursor, esperar_bd, init_schema, sembrar_eventos
 from .simulacion import simular_partido
+START = time.time()
 
 SELECCIONES = {"local", "empate", "visita"}
 CUOTA_COL = {"local": "cuota_local", "empate": "cuota_empate", "visita": "cuota_visita"}
@@ -67,6 +70,24 @@ class ResolverRequest(BaseModel):
 # Luego configurar livenessProbe/readinessProbe en el Deployment de EKS.
 
 
+@app.get("/livez")
+def livez():
+    return { "status": 'alive', "uptime": time.time()-START }
+
+
+@app.get("/readyz")
+def readyz():
+    try:
+        with conexion() as conn:
+            with dict_cursor(conn) as cur:
+                cur.execute("SELECT 1")
+        
+        return JSONResponse(status_code=200,content={ "status": 'ready', "db": 'up' })
+
+    except Exception as e:
+        return JSONResponse(status_code=503,content={ "status": 'not-ready', "db": 'down', "error": str(e) })
+
+        
 @app.get("/api/apuestas/eventos")
 def listar_eventos():
     """Eventos abiertos con sus cuotas (público)."""
