@@ -6,10 +6,10 @@ metadata:
     app: apuestas-service
 spec:
   # ClusterIP = solo accesible DENTRO del clúster.
-  # Otros servicios lo alcanzan vía DNS interno: http://products-service:8001
+  # Otros servicios lo alcanzan vía DNS interno: http://apuestas-service:8001
   type: ClusterIP
   selector:
-    app: products-service
+    app: apuestas-service
   ports:
     - name: http
       protocol: TCP
