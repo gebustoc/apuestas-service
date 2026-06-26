@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apuestas-service
+  labels:
+    app: apuestas-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apuestas-service
+  template:
+    metadata:
+      labels:
+        app: apuestas-service
+    spec:
+      containers:
+        - name: apuestas-service
+          image: <ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/apuestas-service:latest
+          ports:
+            - containerPort: 3003
+          # Probe de "vivo": si falla, Kubernetes reinicia el contenedor.
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 3003
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          # Probe de "listo": si falla, no recibe tráfico desde el Service.
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 3003
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"
+          env:
+              - name: DB_HOST
+                value: "casino-db"
+              - name: POSTGRES_USER
+                value: "casino"
+              - name: POSTGRES_PASSWORD
+                value: "casino"
+              - name: POSTGRES_DB
+                value: "casino_db"
