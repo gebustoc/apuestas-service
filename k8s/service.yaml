@@ -11,7 +11,7 @@ spec:
   selector:
     app: apuestas-service
   ports:
-    - name: http
+    - name: bets-ext
       protocol: TCP
-      port: 8003        # puerto del Service (DNS interno)
+      port: 3003        # puerto del Service (DNS interno)
       targetPort: 3003  # puerto del contenedor
